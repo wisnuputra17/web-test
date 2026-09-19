@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web test - AI Agent Monitor</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #1c2128;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --warning: #d2991d;
+            --error: #f85149;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.1);
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            font-size: 0.95rem;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-running { background: var(--success); }
+        .status-warning { background: var(--warning); }
+        .status-error { background: var(--error); }
+        .status-unknown { background: var(--text-muted); }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 0.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .badge-info {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .badge-success {
+            background: rgba(63, 185, 80, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .badge-error {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .event-log {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+        }
+
+        .event {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .event:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            color: var(--text-muted);
+            min-width: 150px;
+            flex-shrink: 0;
+        }
+
+        .event-type {
+            font-weight: 600;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .event-message {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: #79b8ff;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #3fb950;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">web test</div>
+        <div class="navbar-text">AI Agent Monitor Dashboard</div>
+    </nav>
+
+    <div class="container">
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn-primary" onclick="refreshStatus()">🔄 Refresh Status</button>
+            <button class="btn-success" onclick="spawnAgent()">⚡ Spawn Agent</button>
+            <button class="btn-secondary" onclick="toggleAutoRefresh()" id="auto-refresh-btn">Auto-Refresh: ON</button>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    Hermes Agent
+                    <div class="status-badge" id="hermes-status">
+                        <div class="status-dot status-unknown"></div>
+                        <span>Unknown</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="stat">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value" id="hermes-status-text">Disconnected</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Last Seen</span>
+                        <span class="stat-value" id="hermes-last">--</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Uptime</span>
+                        <span class="stat-value" id="hermes-uptime">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Ollama (Local AI)
+                    <div class="status-badge" id="ollama-status">
+                        <div class="status-dot status-unknown"></div>
+                        <span>Unknown</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="stat">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value" id="ollama-status-text">Disconnected</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Models</span>
+                        <span class="stat-value" id="ollama-models">0</span>
+                    </div>
+                    <div id="models-list"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    N8N Workflows
+                    <div class="status-badge" id="n8n-status">
+                        <div class="status-dot status-unknown"></div>
+                        <span>Unknown</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="stat">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value" id="n8n-status-text">Disconnected</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Last Execution</span>
+                        <span class="stat-value" id="n8n-last">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">System Resources</div>
+                <div class="card-body">
+                    <div class="stat">
+                        <span class="stat-label">CPU</span>
+                        <span class="stat-value" id="sys-cpu">--</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpu-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Memory</span>
+                        <span class="stat-value" id="sys-mem">--</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="mem-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Disk</span>
+                        <span class="stat-value" id="sys-disk">--</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="disk-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Log -->
+        <div class="card">
+            <div class="card-header">Event Stream (Real-time)</div>
+            <div class="event-log" id="event-log">
+                <div class="placeholder">No events yet. Waiting for agent activity...</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>web test &mdash; AI Agent Monitor Dashboard</p>
+        <p>Built with static HTML/JS • Auto-refreshes every 10s</p>
+    </footer>
+
+    <script>
+        // State management
+        const state = {
+            autoRefresh: true,
+            events: [],
+            agents: {
+                hermes: { status: 'unknown', lastSeen: null, uptime: 0 },
+                ollama: { status: 'unknown', models: [] },
+                n8n: { status: 'unknown', lastExecution: null },
+                system: { cpu: 0, mem: 0, disk: 0 }
+            }
+        };
+
+        // Mock data generator (simulates real monitoring)
+        function generateMockData() {
+            const now = new Date();
+            const randomize = (base, variance = 15) => {
+                return Math.max(0, base + (Math.random() - 0.5) * variance);
+            };
+
+            state.agents.hermes = {
+                status: Math.random() > 0.1 ? 'running' : 'idle',
+                lastSeen: new Date(now - Math.random() * 60000).toISOString(),
+                uptime: Math.floor(Math.random() * 1440) + 'min'
+            };
+
+            state.agents.ollama = {
+                status: Math.random() > 0.05 ? 'running' : 'loading',
+                models: ['llama3.2:3b', 'mistral:latest'].slice(0, Math.random() > 0.3 ? 2 : 1)
+            };
+
+            state.agents.n8n = {
+                status: Math.random() > 0.15 ? 'running' : 'idle',
+                lastExecution: new Date(now - Math.random() * 300000).toISOString()
+            };
+
+            state.agents.system = {
+                cpu: randomize(25, 20),
+                mem: randomize(45, 15),
+                disk: randomize(60, 10)
+            };
+
+            // Add mock event
+            if (Math.random() > 0.7) {
+                const types = ['health_check', 'api_call', 'delegate_task', 'workflow_exec'];
+                const sources = ['hermes', 'ollama', 'n8n', 'system'];
+                state.events.unshift({
+                    id: Date.now(),
+                    timestamp: now.toISOString(),
+                    type: types[Math.floor(Math.random() * types.length)],
+                    source: sources[Math.floor(Math.random() * sources.length)],
+                    message: 'Agent activity detected',
+                    level: Math.random() > 0.8 ? 'warning' : 'info'
+                });
+            }
+
+            if (state.events.length > 50) state.events.pop();
+        }
+
+        function getStatusClass(status) {
+            const map = {
+                'running': 'status-running',
+                'idle': 'status-warning',
+                'error': 'status-error',
+                'unknown': 'status-unknown',
+                'loading': 'status-warning'
+            };
+            return map[status] || 'status-unknown';
+        }
+
+        function updateUI() {
+            const data = state.agents;
+
+            // Hermes
+            document.getElementById('hermes-status').innerHTML = `
+                <div class="status-dot ${getStatusClass(data.hermes.status)}"></div>
+                <span>${data.hermes.status.toUpperCase()}</span>
+            `;
+            document.getElementById('hermes-status-text').textContent = data.hermes.status;
+            document.getElementById('hermes-last').textContent = data.hermes.lastSeen ? new Date(data.hermes.lastSeen).toLocaleTimeString() : '--';
+            document.getElementById('hermes-uptime').textContent = data.hermes.uptime;
+
+            // Ollama
+            document.getElementById('ollama-status').innerHTML = `
+                <div class="status-dot ${getStatusClass(data.ollama.status)}"></div>
+                <span>${data.ollama.status.toUpperCase()}</span>
+            `;
+            document.getElementById('ollama-status-text').textContent = data.ollama.status;
+            document.getElementById('ollama-models').textContent = data.ollama.models.length;
+            document.getElementById('models-list').innerHTML = data.ollama.models
+                .map(m => `<span class="badge badge-info">${m}</span>`)
+                .join('');
+
+            // N8N
+            document.getElementById('n8n-status').innerHTML = `
+                <div class="status-dot ${getStatusClass(data.n8n.status)}"></div>
+                <span>${data.n8n.status.toUpperCase()}</span>
+            `;
+            document.getElementById('n8n-status-text').textContent = data.n8n.status;
+            document.getElementById('n8n-last').textContent = data.n8n.lastExecution ? new Date(data.n8n.lastExecution).toLocaleTimeString() : '--';
+
+            // System
+            document.getElementById('sys-cpu').textContent = Math.round(data.system.cpu) + '%';
+            document.getElementById('cpu-bar').style.width = data.system.cpu + '%';
+            document.getElementById('sys-mem').textContent = Math.round(data.system.mem) + '%';
+            document.getElementById('mem-bar').style.width = data.system.mem + '%';
+            document.getElementById('sys-disk').textContent = Math.round(data.system.disk) + '%';
+            document.getElementById('disk-bar').style.width = data.system.disk + '%';
+
+            // Events
+            const log = document.getElementById('event-log');
+            if (state.events.length === 0) {
+                log.innerHTML = '<div class="placeholder">No events recorded</div>';
+            } else {
+                log.innerHTML = state.events.map(e => `
+                    <div class="event">
+                        <span class="event-time">${new Date(e.timestamp).toLocaleTimeString()}</span>
+                        <span class="event-type badge badge-${e.level === 'error' ? 'error' : 'info'}">${e.type}</span>
+                        <span class="event-message"><strong>[${e.source}]</strong> ${e.message}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function refreshStatus() {
+            generateMockData();
+            updateUI();
+        }
+
+        function spawnAgent() {
+            const goal = prompt('Enter agent goal:', 'Monitor system activity');
+            if (goal) {
+                state.events.unshift({
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    type: 'delegate_task',
+                    source: 'hermes',
+                    message: `Agent spawned: "${goal.substring(0, 50)}..."`,
+                    level: 'success'
+                });
+                updateUI();
+                alert('✓ Agent spawned successfully');
+            }
+        }
+
+        function toggleAutoRefresh() {
+            state.autoRefresh = !state.autoRefresh;
+            const btn = document.getElementById('auto-refresh-btn');
+            btn.textContent = `Auto-Refresh: ${state.autoRefresh ? 'ON' : 'OFF'}`;
+            btn.style.opacity = state.autoRefresh ? '1' : '0.6';
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshStatus();
+
+            // Auto-refresh every 10 seconds
+            setInterval(() => {
+                if (state.autoRefresh) {
+                    generateMockData();
+                    updateUI();
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html>
